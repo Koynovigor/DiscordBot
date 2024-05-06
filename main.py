@@ -48,16 +48,14 @@ async def reload(ctx, extension):
         await ctx.send(f'Произошла ошибка при перезагрузке {extension}: {str(e)}')
 
 # Загрузка всех расширений из папки cogs при запуске бота
-async def load_all_extensions():
-    for filename in os.listdir('.\cogs'):
-        if filename.endswith('.py'):
-            extension = filename[:-3]
-            try:
-                await client.load_extension(f'cogs.{extension}')
-                print(f'Загружено расширение: {extension}')
-            except Exception as e:
-                print(f'Не удалось загрузить {extension}: {str(e)}')
+for filename in os.listdir('./cogs'):
+    if filename.endswith('.py'):
+        extension = filename[:-3]
+        try:
+            client.load_extension(f'cogs.{extension}')
+            print(f'Загружено расширение: {extension}')
+        except Exception as e:
+            print(f'Не удалось загрузить {extension}: {str(e)}')
 
 if __name__ == "__main__":
-    asyncio.run(load_all_extensions())
     client.run(DISCORD_TOKEN)

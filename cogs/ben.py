@@ -16,5 +16,5 @@ class Ben(commands.Cog):
     async def ben(self, ctx, *, question):
         await ctx.reply(choice(responses))
 
-async def setup(client):
-    await client.add_cog(Ben(client))
+def setup(client):
+    client.add_cog(Ben(client))

@@ -18,5 +18,5 @@ class Ping(commands.Cog):
         await ctx.send(f'Pong! {latency} ms')
 
 
-async def setup(client):
-    await client.add_cog(Ping(client))
+def setup(client):
+    client.add_cog(Ping(client))

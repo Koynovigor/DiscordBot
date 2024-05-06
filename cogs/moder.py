@@ -44,5 +44,5 @@ class Moderation(commands.Cog):
             await ctx.channel.purge(limit = 1)
             await ctx.send('Произошла ошибка при снятии бана.')
 
-async def setup(client):
-    await client.add_cog(Moderation(client))
+def setup(client):
+    client.add_cog(Moderation(client))
