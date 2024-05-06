@@ -36,6 +36,16 @@ async def unload(ctx, extension):
     except Exception as e:
         await ctx.send(f'Произошла ошибка при выгрузке {extension}: {str(e)}')
 
+# Функция для перезагрузки расширения
+@client.command()
+@commands.has_permissions(administrator = True) # Убедитесь, что команды могут использовать только администраторы
+async def reload(ctx, extension):
+    try:
+        await client.unload_extension(f'cogs.{extension}')
+        await client.load_extension(f'cogs.{extension}')
+        await ctx.send(f'Расширение {extension} перезагружено.')
+    except Exception as e:
+        await ctx.send(f'Произошла ошибка при перезагрузке {extension}: {str(e)}')
 
 # Загрузка всех расширений из папки cogs при запуске бота
 async def load_all_extensions():
