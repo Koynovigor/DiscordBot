@@ -98,8 +98,9 @@ async def ban(ctx, member : discord.Member, *, reason = None):
     await ctx.respond(f'Пользователь {member.mention} был забанен!', ephemeral = True)
 
 @client.user_command()
-async def slap(ctx, user):
-  await ctx.respond(f'{ctx.author.name} slapped {user.name}')
+async def ban(ctx, user):
+    await user.ban()
+    await ctx.respond(f'Пользователь {user.mention} был забанен!', ephemeral = True)
 
 @client.slash_command(name = "unban", description = "Разабанить участника на сервере.")
 @discord.default_permissions(administrator = True)
@@ -123,6 +124,90 @@ async def clear(ctx, number: int = 2):
 async def ping(ctx):
     latency = round(client.latency * 1000)
     await ctx.respond(f'Pong!\nТвой пинг {latency} мс', ephemeral = True)
+
+@client.message_command()
+async def say(ctx, message):
+    await ctx.respond(f'{ctx.author.name} said: {message.content}')
+
+class BooleanConverter(commands.Converter):
+  async def convert(self, ctx, argument):
+    argument = argument.lower()
+    if argument in ('yes', '1', 'true', 'enable', 'on'):
+      return True
+    if argument in ('no', '0', 'false', 'disable', 'off'):
+      return False
+    else:
+      raise ValueError(f'Unknown value "{argument}" was passed.')
+
+@client.slash_command( name = "mode")
+async def toggle(ctx, mode: BooleanConverter):
+  await ctx.respond(f'The value is set to: {mode}')
+
+@client.event
+async def on_application_command_error(ctx, error):
+  if isinstance(error, discord.ApplicationCommandInvokeError):
+    await ctx.respond(str(error.original))
+
+from discord.ui import Button, View
+
+@client.slash_command(name="button", description="Display a button")
+async def button(ctx):
+    # Создание кнопки
+    button = Button(label="Click Me!", style=discord.ButtonStyle.green)
+    # Функция, вызываемая при нажатии на кнопку
+    async def button_callback(interaction):
+        await interaction.response.send_message("Thank you for clicking!", ephemeral=True)
+    # Подключение обработчика к кнопке
+    button.callback = button_callback
+    # Создание представления (View) и добавление кнопки в него
+    view = View()
+    view.add_item(button)
+    # Отправка сообщения с кнопкой
+    await ctx.respond("Hello! Here is your button:", view=view)
+
+# class MusicPlayer(View):
+#     def __init__(self):
+#         super().__init__(timeout = None)  # Timeout = None чтобы кнопки оставались активными
+
+#     @discord.ui.button(label = "Play", style = discord.ButtonStyle.green)
+#     async def play(self, interaction: discord.Interaction, button: discord.ui.Button):
+#         # Здесь код для воспроизведения музыки
+#         await interaction.response.send_message("Playing music...", ephemeral = True)
+
+#     @discord.ui.button(label = "Pause", style=discord.ButtonStyle.red)
+#     async def pause(self, interaction: discord.Interaction, button: discord.ui.Button):
+#         # Здесь код для паузы музыки
+#         await interaction.response.send_message("Music paused.", ephemeral = True)
+
+#     @discord.ui.button(label = "Stop", style = discord.ButtonStyle.grey)
+#     async def stop(self, interaction: discord.Interaction, button: discord.ui.Button):
+#         # Здесь код для остановки музыки
+#         await interaction.response.send_message("Music stopped.", ephemeral = True)
+
+# @client.slash_command(name = "music", description = "Controls for music player.")
+# async def music(ctx):
+#     await ctx.respond("Here are your music controls:", view = MusicPlayer())
+
+
+# @client.slash_command(name = "join")
+# async def join(ctx):
+#     channel = ctx.author.voice.channel
+#     await channel.connect()
+
+# @client.slash_command(name = "play")
+# async def play(ctx, url):
+#     voice_client = discord.utils.get(client.voice_clients, guild=ctx.guild)
+#     if not voice_client:
+#         await ctx.send("Бот не подключен к голосовому каналу.")
+#         return
+#     ffmpeg_audio_source = ffmpeg.fftools.ff
+#     voice_client.play(ffmpeg_audio_source)
+
+# @client.slash_command(name = "leave")
+# async def leave(ctx):
+#     voice_client = discord.utils.get(client.voice_clients, guild = ctx.guild)
+#     if voice_client:
+#         await voice_client.disconnect()
 
 if __name__ == "__main__":
     client.run(DISCORD_TOKEN)
