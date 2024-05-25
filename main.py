@@ -20,67 +20,6 @@ client = commands.Bot(command_prefix = '/', intents = discord.Intents.all(), app
 async def on_ready():
     print(f'Logged in as {client.user}!')
 
-"""
-@client.slash_command(name="hello", description="Greet the user")
-async def hello(ctx):
-    await ctx.respond(f"Hello {ctx.author.name}!")
-
-@client.message_command(name="Reverse Message")
-async def reverse(ctx, message: discord.Message):
-    await ctx.respond(message.content[::-1])
-
-@client.user_command(name="Get ID")
-async def get_id(ctx, user: discord.User):
-    await ctx.respond(f"The ID of {user.name} is {user.id}")
-
-"""
-
-
-"""
-# Функция для загрузки расширения
-@client.slash_command(name = "load", description = "Load a cogs")
-@commands.has_permissions(administrator = True)  # Убедитесь, что команды могут использовать только администраторы
-async def load(ctx, extension):
-    try:
-        await client.load_extension(f'cogs.{extension}')
-        await ctx.send(f'Расширение {extension} загружено.')
-    except Exception as e:
-        await ctx.send(f'Произошла ошибка при загрузке {extension}: {str(e)}')
-
-
-
-# Функция для выгрузки расширения
-@client.command()
-@commands.has_permissions(administrator = True) # Убедитесь, что команды могут использовать только администраторы
-async def unload(ctx, extension):
-    try:
-        await client.unload_extension(f'cogs.{extension}')
-        await ctx.send(f'Расширение {extension} выгружено.')
-    except Exception as e:
-        await ctx.send(f'Произошла ошибка при выгрузке {extension}: {str(e)}')
-
-# Функция для перезагрузки расширения
-@client.command()
-@commands.has_permissions(administrator = True) # Убедитесь, что команды могут использовать только администраторы
-async def reload(ctx, extension):
-    try:
-        await client.unload_extension(f'cogs.{extension}')
-        await client.load_extension(f'cogs.{extension}')
-        await ctx.send(f'Расширение {extension} перезагружено.')
-    except Exception as e:
-        await ctx.send(f'Произошла ошибка при перезагрузке {extension}: {str(e)}')
-
-# Загрузка всех расширений из папки cogs при запуске бота
-for filename in os.listdir('./cogs'):
-    if filename.endswith('.py'):
-        extension = filename[:-3]
-        try:
-            client.load_extension(f'cogs.{extension}')
-            print(f'Загружено расширение: {extension}')
-        except Exception as e:
-            print(f'Не удалось загрузить {extension}: {str(e)}')
-"""
-
 @client.slash_command(name = "ответь", description = "Ответить на вопрос.")
 async def ben(ctx, вопрос):
     await ctx.respond(f'— {вопрос}\n— {choice(responses)}')
@@ -165,49 +104,66 @@ async def button(ctx):
     # Отправка сообщения с кнопкой
     await ctx.respond("Hello! Here is your button:", view=view)
 
-# class MusicPlayer(View):
-#     def __init__(self):
-#         super().__init__(timeout = None)  # Timeout = None чтобы кнопки оставались активными
-
-#     @discord.ui.button(label = "Play", style = discord.ButtonStyle.green)
-#     async def play(self, interaction: discord.Interaction, button: discord.ui.Button):
-#         # Здесь код для воспроизведения музыки
-#         await interaction.response.send_message("Playing music...", ephemeral = True)
-
-#     @discord.ui.button(label = "Pause", style=discord.ButtonStyle.red)
-#     async def pause(self, interaction: discord.Interaction, button: discord.ui.Button):
-#         # Здесь код для паузы музыки
-#         await interaction.response.send_message("Music paused.", ephemeral = True)
-
-#     @discord.ui.button(label = "Stop", style = discord.ButtonStyle.grey)
-#     async def stop(self, interaction: discord.Interaction, button: discord.ui.Button):
-#         # Здесь код для остановки музыки
-#         await interaction.response.send_message("Music stopped.", ephemeral = True)
-
-# @client.slash_command(name = "music", description = "Controls for music player.")
-# async def music(ctx):
-#     await ctx.respond("Here are your music controls:", view = MusicPlayer())
 
 
-# @client.slash_command(name = "join")
-# async def join(ctx):
-#     channel = ctx.author.voice.channel
-#     await channel.connect()
+intents = discord.Intents.default()
+intents.guilds = True
+intents.voice_states = True
 
-# @client.slash_command(name = "play")
-# async def play(ctx, url):
-#     voice_client = discord.utils.get(client.voice_clients, guild=ctx.guild)
-#     if not voice_client:
-#         await ctx.send("Бот не подключен к голосовому каналу.")
-#         return
-#     ffmpeg_audio_source = ffmpeg.fftools.ff
-#     voice_client.play(ffmpeg_audio_source)
+@client.event
+async def on_guild_join(guild):
+    category = await guild.create_category('Приватные комнаты')  # Можно указать категорию, если необходимо
 
-# @client.slash_command(name = "leave")
-# async def leave(ctx):
-#     voice_client = discord.utils.get(client.voice_clients, guild = ctx.guild)
-#     if voice_client:
-#         await voice_client.disconnect()
+    # Создаем голосовой канал
+    new_channel = await guild.create_voice_channel(name = 'Создать [+]', category = category)
+    global TARGET_CHANNEL_ID
+    TARGET_CHANNEL_ID = new_channel.id
+
+class MyView(discord.ui.View):
+    @discord.ui.button(
+            label = "Открыть", 
+            row = 0, 
+            style = discord.ButtonStyle.primary
+    )
+    async def open_button_callback(self, button, interaction):
+        # Открываем канал
+        await interaction.channel.set_permissions(
+            interaction.guild.default_role, 
+            connect = True,
+        )
+        await interaction.response.send_message("Канал открыт!", ephemeral = True)
+
+    @discord.ui.button(
+            label = "Закрыть", 
+            row = 0, 
+            style = discord.ButtonStyle.primary
+    )
+    async def close_button_callback(self, button, interaction):
+        # Закрываем канал
+        await interaction.channel.set_permissions(
+            interaction.guild.default_role, 
+            connect = False,
+        )
+        await interaction.response.send_message("Канал закрыт!", ephemeral = True)
+
+@client.event
+async def on_voice_state_update(member, before, after):
+    
+    if after.channel and after.channel.id == TARGET_CHANNEL_ID:
+        guild = member.guild
+        category = after.channel.category
+        new_channel = await guild.create_voice_channel(
+            name = f'Приват от {member.name}',
+            category = category,
+            user_limit = 0
+        )
+        await member.move_to(new_channel)
+        await new_channel.send(f'{member.mention}, ваш личный канал создан!', view = MyView())
+
+    # Удаление канала, если он пустой
+    if before.channel and before.channel != after.channel:
+        if before.channel.id != TARGET_CHANNEL_ID and len(before.channel.members) == 0:
+            await before.channel.delete()
 
 if __name__ == "__main__":
     client.run(DISCORD_TOKEN)
